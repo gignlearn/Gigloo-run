@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>****** Run – Kids Runner Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #87ceeb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #game {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 300px;
+            background: linear-gradient(#87ceeb, #dff6ff);
+            border: 3px solid #333;
+            overflow: hidden;
+        }
+
+        /* Clouds (Parallax) */
+        .cloud {
+            position: absolute;
+            top: 20px;
+            width: 80px;
+            opacity: 0.7;
+            animation: cloudMove 30s linear infinite;
+        }
+
+        .cloud:nth-child(1) {
+            left: 10%;
+            animation-duration: 35s;
+        }
+
+        .cloud:nth-child(2) {
+            left: 50%;
+            animation-duration: 45s;
+        }
+
+        @keyframes cloudMove {
+            from {
+                transform: translateX(100vw);
+            }
+
+            to {
+                transform: translateX(-200px);
+            }
+        }
+
+        /* Ground */
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background: #4caf50;
+        }
+
+        /* Gigloo */
+        #player {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            width: 60px;
+        }
+
+        .jump {
+            animation: jump 0.6s ease-out;
+        }
+
+        @keyframes jump {
+            0% {
+                bottom: 40px;
+            }
+
+            50% {
+                bottom: 140px;
+            }
+
+            100% {
+                bottom: 40px;
+            }
+        }
+
+        /* Cactus */
+        #hurdle {
+            position: absolute;
+            bottom: 40px;
+            right: -60px;
+            width: 50px;
+            animation: moveHurdle 2.2s linear infinite;
+        }
+
+        @keyframes moveHurdle {
+            from {
+                right: -60px;
+            }
+
+            to {
+                right: 100%;
+            }
+        }
+
+        /* Coin */
+        #coin {
+            position: absolute;
+            bottom: 120px;
+            right: -40px;
+            width: 30px;
+            animation: moveCoin 3s linear infinite;
+        }
+
+        @keyframes moveCoin {
+            from {
+                right: -40px;
+            }
+
+            to {
+                right: 100%;
+            }
+        }
+
+        /* HUD */
+        #scoreBoard {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #gameOver {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 22px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game"><!-- Clouds -->&nbsp;<img class="cloud" src="https://i.imgur.com/8QZQZQZ.png" width="80" style="margin: 0 auto 0 0; display: block; ">&nbsp;<img class="cloud" src="https://i.imgur.com/8QZQZQZ.png" width="80" style="margin: 0 auto 0 0; display: block; ">
+        <div id="scoreBoard">Score: <span id="score">0</span> | Coins: <span id="coins">0</span></div><!-- Player -->&nbsp;<img id="player" src="https://instasize.com/p/c95133a0f19c0f5f381aa3d0a72ae417ec678db1db40a729da9db00acc1e0953" width="60" style="margin: 0 auto 0 0; display: block; "> <!-- Hurdle -->&nbsp;<img id="hurdle" src="https://instasize.com/p/64f5ec8a4f6a85d30999a0284aa7da450660a04b94d80f3e888b6ad253495e06" width="50" style="margin: 0 auto 0 0; display: block; "> <!-- Coin -->&nbsp;<img id="coin" src="https://i.imgur.com/O7p5C8N.png" width="30" style="margin: 0 auto 0 0; display: block; ">
+        <div id="ground"><br></div>
+        <div id="gameOver">
+            <div>**** Over 😢</div><button>Restart</button>
+        </div>
+    </div>
+    <script>
+        const player = document.getElementById("player");
+        const hurdle = document.getElementById("hurdle");
+        const coin = document.getElementById("coin");
+        const scoreEl = document.getElementById("score");
+        const coinsEl = document.getElementById("coins");
+        const gameOverScreen = document.getElementById("gameOver");
+        
+        let score = 0;
+        let coins = 0;
+        let isJumping = false;
+        let gameOver = false;
+        
+        function jump() {
+          if (isJumping || gameOver) return;
+          isJumping = true;
+          player.classList.add("jump");
+          setTimeout(() => {
+            player.classList.remove("jump");
+            isJumping = false;
+          }, 600);
+        }
+        
+        document.addEventListener("keydown", jump);
+        document.addEventListener("touchstart", jump);
+        
+        setInterval(() => {
+          if (gameOver) return;
+        
+          score++;
+          scoreEl.innerText = score;
+        
+          const playerRect = player.getBoundingClientRect();
+          const hurdleRect = hurdle.getBoundingClientRect();
+          const coinRect = coin.getBoundingClientRect();
+        
+          // Collision with hurdle
+          if (
+            hurdleRect.left < playerRect.right &&
+            hurdleRect.right > playerRect.left &&
+            hurdleRect.bottom > playerRect.top
+          ) {
+            gameOver = true;
+            hurdle.style.animation = "none";
+            coin.style.animation = "none";
+            gameOverScreen.style.display = "flex";
+          }
+        
+          // Coin collection
+          if (
+            coinRect.left < playerRect.right &&
+            coinRect.right > playerRect.left &&
+            coinRect.bottom > playerRect.top &&
+            coinRect.top < playerRect.bottom
+          ) {
+            coins++;
+            coinsEl.innerText = coins;
+            coin.style.display = "none";
+            setTimeout(() => coin.style.display = "block", 1000);
+          }
+        
+        }, 100);
+    </script>
+
+<div style="color: red">Word to HTML trial - please <a href="https://wordtohtml.net/site/payment">Go PRO</a> to get whole HTML.</div>
+</body>
+
+</html>
